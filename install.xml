@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="modx.prosilver.en.xsl"?>
+<!--For security purposes, please check: http
+://www.phpbb.com/mods/ for the latest version of this MOD. Although MODs are checked before being allowed in the MODs Database there is no guarantee that there are no security problems within the MOD. No support will be given for MODs not found within the MODs Database which can be found at http://www.phpbb.com/mods/-->
+<mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.phpbb.com/mods/xml/modx-1.2.5.xsd">
+	<header>
+		<license>http://opensource.org/licenses/gpl-license.php GNU General Public License v2</license>
+
+		<title lang="en">JapaneseEmailMod</title>
+		<title lang="ja">JapaneseEmailMod</title>
+
+		<description lang="en">登録ユーザーがメールの文字エンコードを選択できるようになります。</description>
+		<description lang="ja">登録ユーザーがメールの文字エンコードを選択できるようになります。</description>
+
+		<author-notes lang="en">PHP5.0.0 以上で動作します。PHP拡張モジュール mbstring がサポートされている必要があります。"SMTPサーバ の使用" を "いいえ" にしている必要があります。</author-notes>
+		<author-notes lang="ja">PHP5.0.0 以上で動作します。PHP拡張モジュール mbstring がサポートされている必要があります。"SMTPサーバ の使用" を "いいえ" にしている必要があります。</author-notes>
+
+		<author-group>
+			<author>
+				<realname>Yohsuke</realname>
+				<username phpbbcom="no">ocean=Yohsuke</username>
+				<homepage>http://www.bbmods.info/bbs/</homepage>
+ 			</author>
+		</author-group>
+
+		<mod-version>1.0.0</mod-version>
+
+		<installation>
+			<level>easy</level>
+			<time>300</time>
+			<target-version>3.0.9</target-version>
+		</installation>
+
+		<history>
+			<entry>
+				<date>2011-11-03</date>
+				<rev-version>1.0.0</rev-version>
+				<changelog lang="ja">
+					<change>First release.</change>
+				</changelog>
+			</entry>
+		</history>
+	</header>
+
+	<action-group>
+		<copy>
+			<file from="root/umil_auto_JapaneseEmailMod.php" to="includes/umil_auto_JapaneseEmailMod.php" />
+			<file from="root/includes/hooks/hook_JapaneseEmailMod.php" to="includes/hooks/hook_JapaneseEmailMod.php" />
+			<file from="root/language/en/mods/JapaneseEmailMod.php" to="language/en/mods/JapaneseEmailMod.php" />
+			<file from="root/language/ja/mods/JapaneseEmailMod.php" to="language/ja/mods/JapaneseEmailMod.php" />
+		</copy>
+		<open src="styles/prosilver/template/ucp_prefs_personal.html">
+			<edit>
+				<find><![CDATA[	<dl>
+		<dt><label for="massemail1">{L_ADMIN_EMAIL}:</label></dt>
+		<dd>
+			<label for="massemail1"><input type="radio" name="massemail" id="massemail1" value="1"<!-- IF S_MASS_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="massemail0"><input type="radio" name="massemail" id="massemail0" value="0"<!-- IF not S_MASS_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+]]></find>
+				<action type="after-add"><![CDATA[	{JEM_EMAIL_CHARSET}	
+]]></action>
+			</edit>
+		</open>
+		<open src="adm/style/acp_users_prefs.html">
+			<edit>
+				<find><![CDATA[	<dl> 
+		<dt><label for="massemail">{L_ADMIN_EMAIL}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="massemail" value="1"<!-- IF MASS_EMAIL --> id="massemail" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="massemail" value="0"<!-- IF not MASS_EMAIL --> id="massemail" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+]]></find>
+				<action type="after-add"><![CDATA[	{JEM_EMAIL_CHARSET}	
+]]></action>
+			</edit>
+		</open>
+		<open src="includes/functions_messenger.php">
+			<edit>
+				<find><![CDATA[				$$type .= (($$type != '') ? ', ' : '') . (($which_ary['name'] != '') ? mail_encode($which_ary['name'], $encode_eol) . ' <' . $which_ary['email'] . '>' : $which_ary['email']);
+]]></find>
+				<action type="replace-with"><![CDATA[				$$type .= (($$type != '') ? ', ' : '') . (($which_ary['name'] != '') ? phpBB3_JapaneseEmailMod::mail_encode($which_ary['name'], $encode_eol, $which_ary['email']) . ' <' . $which_ary['email'] . '>' : $which_ary['email']); // JapaneseEmailMod
+]]></action>
+			</edit>
+			<edit>
+				<find><![CDATA[function phpbb_mail($to, $subject, $msg, $headers, $eol, &$err_msg)
+{
+]]></find>
+				<action type="after-add"><![CDATA[	return phpBB3_JapaneseEmailMod::phpbb_mail($to, $subject, $msg, $headers, $eol, $err_msg); // JapaneseEmailMod
+]]></action>
+			</edit>
+		</open>
+		<open src="includes/acp/acp_users.php">
+			<edit>
+				<find><![CDATA[							'user_notify'	=> $data['notify'],
+]]></find>
+				<action type="after-add"><![CDATA[							'jem_email_charset'	=> request_var('jem_email_charset', $user_row['jem_email_charset']), // JapaneseEmailMod
+]]></action>
+			</edit>
+		</open>
+		<open src="includes/ucp/ucp_prefs.php">
+			<edit>
+				<find><![CDATA[							'user_style'			=> $data['style'],
+]]></find>
+				<action type="after-add"><![CDATA[							'jem_email_charset' => request_var('jem_email_charset', (string) $user->data['jem_email_charset']), // JapaneseEmailMod
+]]></action>
+			</edit>
+		</open>
+		<php-installer>umil_auto_JapaneseEmailMod.php</php-installer>
+		<diy-instructions lang="ja"><![CDATA[1.	umil ディレクトリと umil_auto_JapaneseEmailMod ファイルを手動で削除してください
+
+2.	AdminCP へ入室し、"キャッシュの消去" を実行してください
+		]]></diy-instructions>
+	</action-group>
+</mod>
